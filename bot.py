@@ -2,7 +2,7 @@ import random
 import hashlib
 from datetime import datetime
 from zoneinfo import ZoneInfo
-from telegram import Update, InlineQueryResultArticle, InputTextMessageContent
+from telegram import Update, InlineQueryResultPhoto
 from telegram.ext import ApplicationBuilder, CommandHandler, InlineQueryHandler, ContextTypes
 import uuid
 
@@ -19,13 +19,13 @@ NAMES_WEIGHTS = [
     ("Drake",       2.0),
     ("Dranniy",     2.0),
     ("Nurs",        2.5),
-    ("Zenox",       2.5),
-    ("Bagrat",      2.5),
+    ("Zenoks",       2.5),
+    ("Bagratinho",      2.5),
     ("Vadim",       2.5),
     ("Nurali",      2.5),
-    ("Musa",        2.0),
+    ("Musya",        2.0),
     ("Dronchik",    2.0),
-    ("Farkhod",     2.0),
+    ("Farhod",     2.0),
     ("Attiks",      2.0),
     ("Riyad",       2.0),
     ("Salieva",     2.0),
@@ -35,6 +35,47 @@ NAMES_WEIGHTS = [
     ("Arthurito",   2.0),
     ("Nscoder",     2.0),
     ("Muraking",    2.0),
+    ("Sapphire",    2.0),
+    ("Andrii",      2.0),
+    ("Andrii mini", 10.0),
+]
+
+NAMES   = [n for n, w in NAMES_WEIGHTS]
+WEIGHTS = [w for n, w in NAMES_WEIGHTS]
+
+def get_daily_name(user_id: int) -> str:
+    today = datetime.now(KYIV_TZ).strftime("%Y-%m-%d")
+    seed = int(hashlib.md5(f"{user_id}-{today}".encode()).hexdigest(), 16)
+    rng = random.Random(seed)
+    return rng.choices(NAMES, weights=WEIGHTS, k=1)[0]
+
+async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await update.message.reply_text(
+        "Напиши @gvardiolhelperbot в любом чате чтобы узнать кто ты сегодня 👤"
+    )
+
+async def inline_query(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    user_id = update.inline_query.from_user.id
+    daily_name = get_daily_name(user_id)
+
+    results = [
+        InlineQueryResultPhoto(
+            id=str(uuid.uuid4()),
+            photo_url=PHOTO_URL,
+            thumbnail_url=PHOTO_URL,
+            title=" ",                              # пустой title — имя скрыто
+            caption=f"Сегодня я *{daily_name}*",   # имя только после отправки
+            parse_mode="Markdown"
+        )
+    ]
+    await update.inline_query.answer(results, cache_time=0)
+
+if __name__ == "__main__":
+    app = ApplicationBuilder().token(BOT_TOKEN).build()
+    app.add_handler(CommandHandler("start", start))
+    app.add_handler(InlineQueryHandler(inline_query))
+    print("gvardiolhelperbot запущен! ✅")
+    app.run_polling()    ("Muraking",    2.0),
     ("Sapphire",    2.0),
     ("Andrii",      2.0),
     ("Andrii mini", 10.0),
